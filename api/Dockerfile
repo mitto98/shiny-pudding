@@ -1,6 +1,6 @@
 FROM node:lts
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 ENV PORT=80
 ENV MEDIA_FOLDER_NAME="media"

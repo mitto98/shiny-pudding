@@ -1,28 +1,11 @@
 <template>
   <div class="container my-2">
-    <h1 class="my-4">{{galleryTitle}}</h1>
+    <h1 class="my-4">{{$config.title}}</h1>
 
     <b-row>
-      <b-col v-if="insta" md="6">
-        <a :href="`https://www.instagram.com${igUsername}`" class="album-link">
-          <b-card no-body>
-            <b-row no-gutters>
-              <b-col md="6">
-                <b-card-img :src="insta.user.profile_pic_url_hd" alt="IG profile pic" class="rounded-circle p-3"/>
-              </b-col>
-              <b-col md="6">
-                <b-card-body :title="insta.user.full_name" class="pt-5">
-                  <b-card-text>
-                    <pre>{{insta.user.biography}}</pre>
-                  </b-card-text>
-
-                </b-card-body>
-              </b-col>
-            </b-row>
-          </b-card>
-        </a>
+      <b-col v-if="$config.igUsername" md="6">
+        <ig-card/>
       </b-col>
-
 
       <b-col v-for="album in albums" :key="album.name" md="3">
         <n-link :to="`/album/${album.name}`" class="album-link">
@@ -43,23 +26,19 @@
 <script>
   export default {
     async asyncData({$axios}) {
-      const res = await $axios.get(`${process.env.apiUrl}/album`);
-      let insta = null;
-      if (process.env.IG_USERNAME)
-        insta = await $axios.get(`https://www.instagram.com/${process.env.IG_USERNAME}/?__a=1`);
-      return {albums: res.data, insta: insta?.data?.graphql};
+      try {
+        const res = await $axios.get('album');
+        return {albums: res.data};
+      } catch (e) {
+        console.error("Unable to fetch albums", e.response);
+      }
     },
     data: () => ({
       albums: [],
-      insta: null,
     }),
-    computed: {
-      galleryTitle: () => process.env.title,
-      igUsername: () => process.env.IG_USERNAME,
-    },
     methods: {
       getCardCover(album) {
-        return `${process.env.apiUrl}/album/${album.name}/image/250/${album.cover}`
+        return `${this.$config.apiUrl}/album/${album.name}/image/250/${album.cover}`
       }
     }
   };

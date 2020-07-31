@@ -4,18 +4,19 @@
       {{$route.params.album}}
     </h1>
 
-    <div v-if="index"
+    <div v-if="index !== null"
          class="mb-0"
          style="z-index: 1000000; right: 45px; position: absolute; top: 15px;">
       <b-icon-download role="button"
                        font-scale="2"
                        @click="downloadImage"
-                       style="fill:white; padding: 5px; "/>
+                       style="fill:white; padding: 5px"/>
     </div>
-
-    <v-gallery :images="images.map(i => getFullSizeImageLink(i.name))"
-               :index="index"
-               @close="index = null"/>
+    <client-only>
+      <v-gallery :images="images.map(i => getFullSizeImageLink(i.name))"
+                 :index="index"
+                 @close="index = null"/>
+    </client-only>
 
     <div id="pig"/>
   </div>
@@ -29,7 +30,7 @@
     name: 'album',
     components: {BIconDownload},
     async asyncData({$axios, params}) {
-      const res = await $axios.get(`${process.env.apiUrl}/album/${params.album}`);
+      const res = await $axios.get(`album/${params.album}`);
       return {images: res.data.images};
     },
     data: () => ({
@@ -39,7 +40,7 @@
     mounted() {
       const options = {
         urlForSize: (filename, size) => {
-          return `${process.env.apiUrl}/album/${this.$route.params.album}/image/${size}/${filename}`
+          return `${this.$config.apiUrl}/album/${this.$route.params.album}/image/${size}/${filename}`
         },
         onClickHandler: (filename) => {
           this.index = this.images.findIndex(i => i.name === filename);
@@ -52,11 +53,11 @@
     },
     methods: {
       getFullSizeImageLink(name) {
-        return `${process.env.apiUrl}/album/${this.$route.params.album}/image/slim/${name}`;
+        return `${this.$config.apiUrl}/album/${this.$route.params.album}/image/slim/${name}`;
       },
       downloadImage() {
         const name = this.images[this.index]?.name;
-        this.$axios.get(`${process.env.apiUrl}/album/${this.$route.params.album}/image/${name}`, {
+        this.$axios.get(`${this.$config.apiUrl}/album/${this.$route.params.album}/image/${name}`, {
           responseType: 'blob',
         }).then(response => {
           fileDownload(response.data, name);
