@@ -1,0 +1,40 @@
+version: '3.5'
+
+services:
+  api:
+    image: mitto98/shiny-pudding-api:latest
+    volumes:
+      - ./media:/app/media
+      - pcache:/app/cache
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pudding-api.rule=Host(`ph.mattiadapino.it`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.pudding-api.middlewares=pudding-stripprefix"
+      - "traefik.http.middlewares.pudding-stripprefix.stripprefix.prefixes=/api"
+    restart: always
+    networks:
+      - default
+
+  frontend:
+    image: mitto98/shiny-pudding:latest
+    expose:
+      - 80
+    environment:
+      DOCKER_API_URL: "http://ph.mattiadapino.it/api"
+    #      PUBLIC_API_URL: "http://ph.mattiadapino.it/api"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pudding.rule=Host(`ph.mattiadapino.it`)"
+    restart: always
+    depends_on:
+      - api
+    networks:
+      - default
+
+volumes:
+  pcache:
+
+networks:
+  default:
+    external:
+      name: gateway
