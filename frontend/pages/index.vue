@@ -7,11 +7,11 @@
         <ig-card/>
       </b-col>
 
-      <b-col v-for="album in albums" :key="album.name" md="3">
+      <b-col v-for="album in albums" :key="album.name" md="3" class="mb-3">
         <n-link :to="`/album/${album.name}`" class="album-link">
           <article class="album-card mb-2">
             <div class="square">
-              <img :src="getCardCover(album)" :alt="album.name" class="card-img-top">
+              <div class="img-box" :style="`background-image: url(${getCardCover(album)})`"/>
             </div>
             <div class="card-body">
               <p class="card-text">{{album.name}}</p>
@@ -38,7 +38,7 @@
     }),
     methods: {
       getCardCover(album) {
-        return `${this.$config.apiUrl}/album/${album.name}/image/250/${album.cover}`
+        return encodeURI(`${this.$config.apiUrl}/album/${album.name}/image/250/${album.cover}`)
       }
     }
   };
@@ -65,11 +65,15 @@
         padding-bottom: 100%;
       }
 
-      .card-img-top {
+      .img-box {
         position: absolute;
         width: 100%;
-        /*height: 100%;*/
+        height: 100%;
+        background-position: 50% 50%;
+        background-size: cover;
+        background-repeat: no-repeat;
       }
+
     }
 
     .card-body {
