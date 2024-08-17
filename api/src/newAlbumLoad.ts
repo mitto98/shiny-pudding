@@ -1,46 +1,50 @@
 import Album from "./types/Album";
-import {getAlbumsList} from "./albumUtils";
 
-let isWorking = false;
+let isProcessing = false;
 
-async function runAlbumsCompression(albums: Album[]) {
+async function runAlbumsCompression(albums: Album[]): Promise<void> {
+  for (const album of albums) {
+    console.debug(`Album: ${album.name}`);
+    if (!album.isCompressed()) album.createCompressedTree();
 
-    for (const album of albums) {
+    const photos = await album.getPhotos();
 
-        if (!album.isCompressed()) {
-            album.createCompressedTree();
-        }
+    const processes = photos.map(async (photo) => {
+      if (photo.isCompressed()) return;
 
-        for (const photo of await album.getUncompressedPhotos()) {
+      console.debug(
+        `Image: ${photo.name} (compressed: ${photo.isCompressed()})`
+      );
 
-            if (photo.isCompressed())
-                break;
+      await photo.compress();
+    });
 
-            await photo.compress();
-        }
-    }
+    await Promise.all(processes);
+  }
 }
 
 function scanTimerCallback() {
+  if (isProcessing) return;
 
-    if (isWorking) {
-        return;
-    }
+  console.debug("Scanning for new albums");
 
-    const {MEDIA_FOLDER_NAME} = process.env;
-    const albums = getAlbumsList(MEDIA_FOLDER_NAME || '');
+  const { MEDIA_FOLDER_NAME } = process.env;
+  const albums = Album.getAlbums(MEDIA_FOLDER_NAME || "");
+  console.debug(`Found ${albums.length} albums`);
 
-    //start promise
-    if (albums.length) {
-        isWorking = true;
-        runAlbumsCompression(albums).then(() => {
-            isWorking = false;
-        });
-    }
+  //start promise
+  if (albums.length) {
+    isProcessing = true;
+    runAlbumsCompression(albums).finally(() => {
+      isProcessing = false;
+      console.log();
+    });
+  }
 }
 
 export default function () {
-    const {SCAN_INTERVAL} = process.env;
-    const scanInterval: number = parseInt(SCAN_INTERVAL || '10000');
-    setInterval(scanTimerCallback, scanInterval);
+  const { SCAN_INTERVAL } = process.env;
+  const scanInterval: number = parseInt(SCAN_INTERVAL || "10000");
+  setInterval(scanTimerCallback, scanInterval);
+  scanTimerCallback();
 }
