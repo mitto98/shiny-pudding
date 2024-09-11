@@ -4,7 +4,7 @@ let isProcessing = false;
 
 async function runAlbumsCompression(albums: Album[]): Promise<void> {
   for (const album of albums) {
-    console.debug(`Album: ${album.name}`);
+    // console.debug(`Album: ${album.name}`);
     if (!album.isCompressed()) album.createCompressedTree();
 
     const photos = await album.getPhotos();
@@ -26,18 +26,18 @@ async function runAlbumsCompression(albums: Album[]): Promise<void> {
 function scanTimerCallback() {
   if (isProcessing) return;
 
-  console.debug("Scanning for new albums");
+  // console.debug("Scanning for new albums");
 
   const { MEDIA_FOLDER_NAME } = process.env;
   const albums = Album.getAlbums(MEDIA_FOLDER_NAME || "");
-  console.debug(`Found ${albums.length} albums`);
+  // console.debug(`Found ${albums.length} albums`);
 
   //start promise
   if (albums.length) {
     isProcessing = true;
     runAlbumsCompression(albums).finally(() => {
       isProcessing = false;
-      console.log();
+      // console.log();
     });
   }
 }
